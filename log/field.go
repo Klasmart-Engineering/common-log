@@ -455,6 +455,11 @@ func Durationp(key string, val *time.Duration) Field {
 	return Duration(key, *val)
 }
 
+// Err is shorthand for the common idiom NamedError("error", err).
+func Err(err error) Field {
+	return NamedError("error", err)
+}
+
 // NamedError constructs a field that lazily stores err.Error() under the
 // provided key. Errors which also implement fmt.Formatter (like those produced
 // by github.com/pkg/errors) will also have their verbose representation stored

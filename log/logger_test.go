@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -32,13 +33,14 @@ func TestMain(m *testing.M) {
 		String("string", "abc"),
 		Time("time", time.Now()),
 		Duration("duration", time.Second),
+		Err(errors.New("test error")),
 		Any("any", badaCtx),
 	}
 }
 
 func TestNewLogger(t *testing.T) {
 	Debug(testContext, "Debug test", testFields...)
-	Info(testContext, "INFO test", testFields...)
+	Info(testContext, "Info test", testFields...)
 	Warn(testContext, "Warn test", testFields...)
 	Error(testContext, "Error test", testFields...)
 }
