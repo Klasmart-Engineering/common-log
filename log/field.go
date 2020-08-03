@@ -47,13 +47,13 @@ const (
 	Int16Type
 	// Int8Type indicates that the field carries an int8.
 	Int8Type
+	// IntType indicates that the field carries an int.
+	IntType
 	// StringType indicates that the field carries a string.
 	StringType
 	// TimeType indicates that the field carries a time.Time that is
 	// representable by a UnixNano() stored as an int64.
 	TimeType
-	// TimeFullType indicates that the field carries a time.Time stored as-is.
-	TimeFullType
 	// Uint64Type indicates that the field carries a uint64.
 	Uint64Type
 	// Uint32Type indicates that the field carries a uint32.
@@ -62,6 +62,8 @@ const (
 	Uint16Type
 	// Uint8Type indicates that the field carries a uint8.
 	Uint8Type
+	// UintType indicates that the field carries a uint.
+	UintType
 	// UintptrType indicates that the field carries a uintptr.
 	UintptrType
 	// ReflectType indicates that the field carries an interface{}, which should
@@ -76,17 +78,57 @@ const (
 	ErrorType
 	// SkipType indicates that the field is a no-op.
 	SkipType
+
+	// BoolsType indicates that the field carries a bool slice.
+	BoolsType
+	// ByteStringsType indicates that the field carries UTF-8 encoded bytes.
+	ByteStringsType
+	// Complex128sType indicates that the field carries a complex128 slice.
+	Complex128sType
+	// Complex64sType indicates that the field carries a complex128 slice.
+	Complex64sType
+	// DurationsType indicates that the field carries a time.Duration slice.
+	DurationsType
+	// Float64sType indicates that the field carries a float64 slice.
+	Float64sType
+	// Float32sType indicates that the field carries a float32 slice.
+	Float32sType
+	// Int64sType indicates that the field carries an int64 slice.
+	Int64sType
+	// Int32sType indicates that the field carries an int32 slice.
+	Int32sType
+	// Int16sType indicates that the field carries an int16 slice.
+	Int16sType
+	// Int8sType indicates that the field carries an int8 slice.
+	Int8sType
+	// IntsType indicates that the field carries an int slice.
+	IntsType
+	// StringsType indicates that the field carries a string slice.
+	StringsType
+	// TimesType indicates that the field carries a time.Time slice that is
+	// representable by a UnixNano() stored as an int64.
+	TimesType
+	// Uint64sType indicates that the field carries a uint64 slice.
+	Uint64sType
+	// Uint32sType indicates that the field carries a uint32 slice.
+	Uint32sType
+	// Uint16sType indicates that the field carries a uint16 slice.
+	Uint16sType
+	// Uint8sType indicates that the field carries a uint8 slice.
+	Uint8sType
+	// UintsType indicates that the field carries a uint slice.
+	UintsType
+	// UintptrsType indicates that the field carries a uintptr slice.
+	UintptrsType
 )
 
 // A Field is a marshaling operation used to add a key-value pair to a logger's
 // context. Most fields are lazily marshaled, so it's inexpensive to add fields
 // to disabled debug-level log statements.
 type Field struct {
-	Key       string
-	Type      FieldType
-	Integer   int64
-	String    string
-	Interface interface{}
+	Key   string
+	Type  FieldType
+	Value interface{}
 }
 
 var (
@@ -112,16 +154,12 @@ func nilField(key string) Field { return Reflect(key, nil) }
 // zap's JSON encoder base64-encodes binary blobs. To log UTF-8 encoded text,
 // use ByteString.
 func Binary(key string, val []byte) Field {
-	return Field{Key: key, Type: BinaryType, Interface: val}
+	return Field{Key: key, Type: BinaryType, Value: val}
 }
 
 // Bool constructs a field that carries a bool.
 func Bool(key string, val bool) Field {
-	var ival int64
-	if val {
-		ival = 1
-	}
-	return Field{Key: key, Type: BoolType, Integer: ival}
+	return Field{Key: key, Type: BoolType, Value: val}
 }
 
 // Boolp constructs a field that carries a *bool. The returned Field will safely
@@ -137,14 +175,14 @@ func Boolp(key string, val *bool) Field {
 // To log opaque binary blobs (which aren't necessarily valid UTF-8), use
 // Binary.
 func ByteString(key string, val []byte) Field {
-	return Field{Key: key, Type: ByteStringType, Interface: val}
+	return Field{Key: key, Type: ByteStringType, Value: val}
 }
 
 // Complex128 constructs a field that carries a complex number. Unlike most
 // numeric fields, this costs an allocation (to convert the complex128 to
 // interface{}).
 func Complex128(key string, val complex128) Field {
-	return Field{Key: key, Type: Complex128Type, Interface: val}
+	return Field{Key: key, Type: Complex128Type, Value: val}
 }
 
 // Complex128p constructs a field that carries a *complex128. The returned Field will safely
@@ -160,7 +198,7 @@ func Complex128p(key string, val *complex128) Field {
 // numeric fields, this costs an allocation (to convert the complex64 to
 // interface{}).
 func Complex64(key string, val complex64) Field {
-	return Field{Key: key, Type: Complex64Type, Interface: val}
+	return Field{Key: key, Type: Complex64Type, Value: val}
 }
 
 // Complex64p constructs a field that carries a *complex64. The returned Field will safely
@@ -176,7 +214,7 @@ func Complex64p(key string, val *complex64) Field {
 // floating-point value is represented is encoder-dependent, so marshaling is
 // necessarily lazy.
 func Float64(key string, val float64) Field {
-	return Field{Key: key, Type: Float64Type, Integer: int64(math.Float64bits(val))}
+	return Field{Key: key, Type: Float64Type, Value: val}
 }
 
 // Float64p constructs a field that carries a *float64. The returned Field will safely
@@ -192,7 +230,7 @@ func Float64p(key string, val *float64) Field {
 // floating-point value is represented is encoder-dependent, so marshaling is
 // necessarily lazy.
 func Float32(key string, val float32) Field {
-	return Field{Key: key, Type: Float32Type, Integer: int64(math.Float32bits(val))}
+	return Field{Key: key, Type: Float32Type, Value: val}
 }
 
 // Float32p constructs a field that carries a *float32. The returned Field will safely
@@ -206,7 +244,7 @@ func Float32p(key string, val *float32) Field {
 
 // Int constructs a field with the given key and value.
 func Int(key string, val int) Field {
-	return Int64(key, int64(val))
+	return Field{Key: key, Type: IntType, Value: val}
 }
 
 // Intp constructs a field that carries a *int. The returned Field will safely
@@ -220,7 +258,7 @@ func Intp(key string, val *int) Field {
 
 // Int64 constructs a field with the given key and value.
 func Int64(key string, val int64) Field {
-	return Field{Key: key, Type: Int64Type, Integer: val}
+	return Field{Key: key, Type: Int64Type, Value: val}
 }
 
 // Int64p constructs a field that carries a *int64. The returned Field will safely
@@ -234,7 +272,7 @@ func Int64p(key string, val *int64) Field {
 
 // Int32 constructs a field with the given key and value.
 func Int32(key string, val int32) Field {
-	return Field{Key: key, Type: Int32Type, Integer: int64(val)}
+	return Field{Key: key, Type: Int32Type, Value: val}
 }
 
 // Int32p constructs a field that carries a *int32. The returned Field will safely
@@ -248,7 +286,7 @@ func Int32p(key string, val *int32) Field {
 
 // Int16 constructs a field with the given key and value.
 func Int16(key string, val int16) Field {
-	return Field{Key: key, Type: Int16Type, Integer: int64(val)}
+	return Field{Key: key, Type: Int16Type, Value: val}
 }
 
 // Int16p constructs a field that carries a *int16. The returned Field will safely
@@ -262,7 +300,7 @@ func Int16p(key string, val *int16) Field {
 
 // Int8 constructs a field with the given key and value.
 func Int8(key string, val int8) Field {
-	return Field{Key: key, Type: Int8Type, Integer: int64(val)}
+	return Field{Key: key, Type: Int8Type, Value: val}
 }
 
 // Int8p constructs a field that carries a *int8. The returned Field will safely
@@ -276,7 +314,7 @@ func Int8p(key string, val *int8) Field {
 
 // String constructs a field with the given key and value.
 func String(key string, val string) Field {
-	return Field{Key: key, Type: StringType, String: val}
+	return Field{Key: key, Type: StringType, Value: val}
 }
 
 // Stringp constructs a field that carries a *string. The returned Field will safely
@@ -290,7 +328,7 @@ func Stringp(key string, val *string) Field {
 
 // Uint constructs a field with the given key and value.
 func Uint(key string, val uint) Field {
-	return Uint64(key, uint64(val))
+	return Field{Key: key, Type: UintType, Value: val}
 }
 
 // Uintp constructs a field that carries a *uint. The returned Field will safely
@@ -304,7 +342,7 @@ func Uintp(key string, val *uint) Field {
 
 // Uint64 constructs a field with the given key and value.
 func Uint64(key string, val uint64) Field {
-	return Field{Key: key, Type: Uint64Type, Integer: int64(val)}
+	return Field{Key: key, Type: Uint64Type, Value: val}
 }
 
 // Uint64p constructs a field that carries a *uint64. The returned Field will safely
@@ -318,7 +356,7 @@ func Uint64p(key string, val *uint64) Field {
 
 // Uint32 constructs a field with the given key and value.
 func Uint32(key string, val uint32) Field {
-	return Field{Key: key, Type: Uint32Type, Integer: int64(val)}
+	return Field{Key: key, Type: Uint32Type, Value: val}
 }
 
 // Uint32p constructs a field that carries a *uint32. The returned Field will safely
@@ -332,7 +370,7 @@ func Uint32p(key string, val *uint32) Field {
 
 // Uint16 constructs a field with the given key and value.
 func Uint16(key string, val uint16) Field {
-	return Field{Key: key, Type: Uint16Type, Integer: int64(val)}
+	return Field{Key: key, Type: Uint16Type, Value: val}
 }
 
 // Uint16p constructs a field that carries a *uint16. The returned Field will safely
@@ -346,7 +384,7 @@ func Uint16p(key string, val *uint16) Field {
 
 // Uint8 constructs a field with the given key and value.
 func Uint8(key string, val uint8) Field {
-	return Field{Key: key, Type: Uint8Type, Integer: int64(val)}
+	return Field{Key: key, Type: Uint8Type, Value: val}
 }
 
 // Uint8p constructs a field that carries a *uint8. The returned Field will safely
@@ -360,7 +398,7 @@ func Uint8p(key string, val *uint8) Field {
 
 // Uintptr constructs a field with the given key and value.
 func Uintptr(key string, val uintptr) Field {
-	return Field{Key: key, Type: UintptrType, Integer: int64(val)}
+	return Field{Key: key, Type: UintptrType, Value: val}
 }
 
 // Uintptrp constructs a field that carries a *uintptr. The returned Field will safely
@@ -380,7 +418,7 @@ func Uintptrp(key string, val *uintptr) Field {
 // If encoding fails (e.g., trying to serialize a map[int]string to JSON), Reflect
 // includes the error message in the final log output.
 func Reflect(key string, val interface{}) Field {
-	return Field{Key: key, Type: ReflectType, Interface: val}
+	return Field{Key: key, Type: ReflectType, Value: val}
 }
 
 // Namespace creates a named, isolated scope within the logger's context. All
@@ -395,16 +433,13 @@ func Namespace(key string) Field {
 // Stringer constructs a field with the given key and the output of the value's
 // String method. The Stringer's String method is called lazily.
 func Stringer(key string, val fmt.Stringer) Field {
-	return Field{Key: key, Type: StringerType, Interface: val}
+	return Field{Key: key, Type: StringerType, Value: val}
 }
 
 // Time constructs a Field with the given key and value. The encoder
 // controls how the time is serialized.
 func Time(key string, val time.Time) Field {
-	if val.Before(_minTimeInt64) || val.After(_maxTimeInt64) {
-		return Field{Key: key, Type: TimeFullType, Interface: val}
-	}
-	return Field{Key: key, Type: TimeType, Integer: val.UnixNano(), Interface: val.Location()}
+	return Field{Key: key, Type: TimeType, Value: val}
 }
 
 // Timep constructs a field that carries a *time.Time. The returned Field will safely
@@ -443,7 +478,7 @@ func getStackFrames(skip int) (frames []string) {
 // Duration constructs a field with the given key and value. The encoder
 // controls how the duration is serialized.
 func Duration(key string, val time.Duration) Field {
-	return Field{Key: key, Type: DurationType, Integer: int64(val)}
+	return Field{Key: key, Type: DurationType, Value: val}
 }
 
 // Durationp constructs a field that carries a *time.Duration. The returned Field will safely
@@ -471,7 +506,7 @@ func NamedError(key string, err error) Field {
 	if err == nil {
 		return Skip()
 	}
-	return Field{Key: key, Type: ErrorType, Interface: err}
+	return Field{Key: key, Type: ErrorType, Value: err}
 }
 
 // Any takes a key and an arbitrary value and chooses the best way to represent
@@ -610,292 +645,112 @@ func Any(key string, value interface{}) Field {
 	}
 }
 
-// Array constructs a field with the given key and ArrayMarshaler. It provides
-// a flexible, but still type-safe and efficient, way to add array-like types
-// to the logging context. The struct's MarshalLogArray method is called lazily.
-func Array(key string, val ArrayMarshaler) Field {
-	return Field{Key: key, Type: ArrayMarshalerType, Interface: val}
-}
+// // Array constructs a field with the given key and ArrayMarshaler. It provides
+// // a flexible, but still type-safe and efficient, way to add array-like types
+// // to the logging context. The struct's MarshalLogArray method is called lazily.
+// func Array(key string, val ArrayMarshaler) Field {
+// 	return Field{Key: key, Type: ArrayMarshalerType, Value: val}
+// }
 
 // Bools constructs a field that carries a slice of bools.
 func Bools(key string, bs []bool) Field {
-	return Array(key, bools(bs))
+	return Field{Key: key, Type: BoolsType, Value: bs}
 }
 
 // ByteStrings constructs a field that carries a slice of []byte, each of which
 // must be UTF-8 encoded text.
 func ByteStrings(key string, bss [][]byte) Field {
-	return Array(key, byteStringsArray(bss))
+	return Field{Key: key, Type: ByteStringsType, Value: bss}
 }
 
 // Complex128s constructs a field that carries a slice of complex numbers.
 func Complex128s(key string, nums []complex128) Field {
-	return Array(key, complex128s(nums))
+	return Field{Key: key, Type: Complex128sType, Value: nums}
 }
 
 // Complex64s constructs a field that carries a slice of complex numbers.
 func Complex64s(key string, nums []complex64) Field {
-	return Array(key, complex64s(nums))
+	return Field{Key: key, Type: Complex64sType, Value: nums}
 }
 
 // Durations constructs a field that carries a slice of time.Durations.
 func Durations(key string, ds []time.Duration) Field {
-	return Array(key, durations(ds))
+	return Field{Key: key, Type: DurationsType, Value: ds}
 }
 
 // Float64s constructs a field that carries a slice of floats.
 func Float64s(key string, nums []float64) Field {
-	return Array(key, float64s(nums))
+	return Field{Key: key, Type: Float64sType, Value: nums}
 }
 
 // Float32s constructs a field that carries a slice of floats.
 func Float32s(key string, nums []float32) Field {
-	return Array(key, float32s(nums))
+	return Field{Key: key, Type: Float32sType, Value: nums}
 }
 
 // Ints constructs a field that carries a slice of integers.
 func Ints(key string, nums []int) Field {
-	return Array(key, ints(nums))
+	return Field{Key: key, Type: IntsType, Value: nums}
 }
 
 // Int64s constructs a field that carries a slice of integers.
 func Int64s(key string, nums []int64) Field {
-	return Array(key, int64s(nums))
+	return Field{Key: key, Type: Int64sType, Value: nums}
 }
 
 // Int32s constructs a field that carries a slice of integers.
 func Int32s(key string, nums []int32) Field {
-	return Array(key, int32s(nums))
+	return Field{Key: key, Type: Int32sType, Value: nums}
 }
 
 // Int16s constructs a field that carries a slice of integers.
 func Int16s(key string, nums []int16) Field {
-	return Array(key, int16s(nums))
+	return Field{Key: key, Type: Int16sType, Value: nums}
 }
 
 // Int8s constructs a field that carries a slice of integers.
 func Int8s(key string, nums []int8) Field {
-	return Array(key, int8s(nums))
+	return Field{Key: key, Type: Int8sType, Value: nums}
 }
 
 // Strings constructs a field that carries a slice of strings.
 func Strings(key string, ss []string) Field {
-	return Array(key, stringArray(ss))
+	return Field{Key: key, Type: StringsType, Value: ss}
 }
 
 // Times constructs a field that carries a slice of time.Times.
 func Times(key string, ts []time.Time) Field {
-	return Array(key, times(ts))
+	return Field{Key: key, Type: TimesType, Value: ts}
 }
 
 // Uints constructs a field that carries a slice of unsigned integers.
 func Uints(key string, nums []uint) Field {
-	return Array(key, uints(nums))
+	return Field{Key: key, Type: UintsType, Value: nums}
 }
 
 // Uint64s constructs a field that carries a slice of unsigned integers.
 func Uint64s(key string, nums []uint64) Field {
-	return Array(key, uint64s(nums))
+	return Field{Key: key, Type: Uint64sType, Value: nums}
 }
 
 // Uint32s constructs a field that carries a slice of unsigned integers.
 func Uint32s(key string, nums []uint32) Field {
-	return Array(key, uint32s(nums))
+	return Field{Key: key, Type: Uint32sType, Value: nums}
 }
 
 // Uint16s constructs a field that carries a slice of unsigned integers.
 func Uint16s(key string, nums []uint16) Field {
-	return Array(key, uint16s(nums))
+	return Field{Key: key, Type: Uint16sType, Value: nums}
 }
 
 // Uint8s constructs a field that carries a slice of unsigned integers.
 func Uint8s(key string, nums []uint8) Field {
-	return Array(key, uint8s(nums))
+	return Field{Key: key, Type: Uint8sType, Value: nums}
 }
 
 // Uintptrs constructs a field that carries a slice of pointer addresses.
 func Uintptrs(key string, us []uintptr) Field {
-	return Array(key, uintptrs(us))
-}
-
-type bools []bool
-
-func (bs bools) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range bs {
-		arr.AppendBool(bs[i])
-	}
-	return nil
-}
-
-type byteStringsArray [][]byte
-
-func (bss byteStringsArray) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range bss {
-		arr.AppendByteString(bss[i])
-	}
-	return nil
-}
-
-type complex128s []complex128
-
-func (nums complex128s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendComplex128(nums[i])
-	}
-	return nil
-}
-
-type complex64s []complex64
-
-func (nums complex64s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendComplex64(nums[i])
-	}
-	return nil
-}
-
-type durations []time.Duration
-
-func (ds durations) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range ds {
-		arr.AppendDuration(ds[i])
-	}
-	return nil
-}
-
-type float64s []float64
-
-func (nums float64s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendFloat64(nums[i])
-	}
-	return nil
-}
-
-type float32s []float32
-
-func (nums float32s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendFloat32(nums[i])
-	}
-	return nil
-}
-
-type ints []int
-
-func (nums ints) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendInt(nums[i])
-	}
-	return nil
-}
-
-type int64s []int64
-
-func (nums int64s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendInt64(nums[i])
-	}
-	return nil
-}
-
-type int32s []int32
-
-func (nums int32s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendInt32(nums[i])
-	}
-	return nil
-}
-
-type int16s []int16
-
-func (nums int16s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendInt16(nums[i])
-	}
-	return nil
-}
-
-type int8s []int8
-
-func (nums int8s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendInt8(nums[i])
-	}
-	return nil
-}
-
-type stringArray []string
-
-func (ss stringArray) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range ss {
-		arr.AppendString(ss[i])
-	}
-	return nil
-}
-
-type times []time.Time
-
-func (ts times) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range ts {
-		arr.AppendTime(ts[i])
-	}
-	return nil
-}
-
-type uints []uint
-
-func (nums uints) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendUint(nums[i])
-	}
-	return nil
-}
-
-type uint64s []uint64
-
-func (nums uint64s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendUint64(nums[i])
-	}
-	return nil
-}
-
-type uint32s []uint32
-
-func (nums uint32s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendUint32(nums[i])
-	}
-	return nil
-}
-
-type uint16s []uint16
-
-func (nums uint16s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendUint16(nums[i])
-	}
-	return nil
-}
-
-type uint8s []uint8
-
-func (nums uint8s) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendUint8(nums[i])
-	}
-	return nil
-}
-
-type uintptrs []uintptr
-
-func (nums uintptrs) MarshalLogArray(arr ArrayEncoder) error {
-	for i := range nums {
-		arr.AppendUintptr(nums[i])
-	}
-	return nil
+	return Field{Key: key, Type: UintptrsType, Value: us}
 }
 
 // TraceContext constructs a field that carries a slice of trace id in context.
