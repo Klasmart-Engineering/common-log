@@ -15,7 +15,7 @@ func NewDefaultZapLogger() *ZapLogger {
 	lc := zap.NewDevelopmentConfig()
 	lc.Encoding = "json"
 
-	logger, _ := lc.Build()
+	logger, _ := lc.Build(zap.AddCallerSkip(2))
 
 	return NewZapLogger(logger)
 }
