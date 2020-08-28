@@ -76,6 +76,8 @@ func (l ZapLogger) parseFields(fields []Field) []zap.Field {
 			zfields[index] = zap.Int16(field.Key, field.Value.(int16))
 		case Int8Type:
 			zfields[index] = zap.Int8(field.Key, field.Value.(int8))
+		case IntType:
+			zfields[index] = zap.Int(field.Key, field.Value.(int))
 		case StringType:
 			zfields[index] = zap.String(field.Key, field.Value.(string))
 		case TimeType:
@@ -88,6 +90,8 @@ func (l ZapLogger) parseFields(fields []Field) []zap.Field {
 			zfields[index] = zap.Uint16(field.Key, field.Value.(uint16))
 		case Uint8Type:
 			zfields[index] = zap.Uint8(field.Key, field.Value.(uint8))
+		case UintType:
+			zfields[index] = zap.Uint(field.Key, field.Value.(uint))
 		case UintptrType:
 			zfields[index] = zap.Uintptr(field.Key, field.Value.(uintptr))
 		case ReflectType:
@@ -141,7 +145,7 @@ func (l ZapLogger) parseFields(fields []Field) []zap.Field {
 		case UintptrsType:
 			zfields[index] = zap.Uintptrs(field.Key, field.Value.([]uintptr))
 		default:
-			zfields[index] = zap.Skip()
+			zfields[index] = zap.Any(field.Key, field.Value)
 		}
 	}
 

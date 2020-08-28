@@ -56,6 +56,7 @@ func TestMain(m *testing.M) {
 		Durations("durations", []time.Duration{time.Minute, time.Hour}),
 		Err(errors.New("test error")),
 		NamedError("my error", errors.New("my error")),
+		Stack("stack"),
 		Any("any", badaCtx),
 		Skip(),
 	}
