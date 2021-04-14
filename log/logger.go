@@ -13,8 +13,12 @@ type Logger interface {
 }
 
 var (
-	globalLogger Logger = NewDefaultZapLogger()
+	globalLogger Logger = New()
 )
+
+func New() Logger {
+	return NewDefaultZapLogger()
+}
 
 // ReplaceGlobals replace package level logger
 func ReplaceGlobals(logger Logger) {
