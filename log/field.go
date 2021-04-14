@@ -3,7 +3,6 @@ package log
 import (
 	"context"
 	"fmt"
-	"math"
 	"runtime"
 	"strconv"
 	"strings"
@@ -130,11 +129,6 @@ type Field struct {
 	Type  FieldType
 	Value interface{}
 }
-
-var (
-	_minTimeInt64 = time.Unix(0, math.MinInt64)
-	_maxTimeInt64 = time.Unix(0, math.MaxInt64)
-)
 
 // Skip constructs a no-op field, which is often useful when handling invalid
 // inputs in other Field constructors.

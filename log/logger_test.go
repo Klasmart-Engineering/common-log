@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"errors"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -82,4 +83,18 @@ func TestPanic(t *testing.T) {
 
 func TestFatal(t *testing.T) {
 	Fatal(testContext, "Fatal test", testFields...)
+}
+
+func TestNewWriter(t *testing.T) {
+	file, _ := ioutil.TempFile(".", "logger*.log")
+	defer file.Close()
+
+	Writer = file
+
+	ReplaceGlobals(New())
+
+	Debug(testContext, "Debug test", testFields...)
+	Info(testContext, "Info test", testFields...)
+	Warn(testContext, "Warn test", testFields...)
+	Error(testContext, "Error test", testFields...)
 }

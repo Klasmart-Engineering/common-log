@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type ZapLogger struct {
@@ -12,10 +13,14 @@ type ZapLogger struct {
 }
 
 func NewDefaultZapLogger() *ZapLogger {
-	lc := zap.NewDevelopmentConfig()
-	lc.Encoding = "json"
+	encoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
+	writer := zapcore.AddSync(Writer)
 
-	logger, _ := lc.Build(zap.AddCallerSkip(2))
+	core := zapcore.NewCore(encoder, writer, zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= zapcore.DebugLevel
+	}))
+
+	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))
 
 	return NewZapLogger(logger)
 }
