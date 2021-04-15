@@ -1,6 +1,9 @@
 package log
 
-import "context"
+import (
+	"context"
+	"os"
+)
 
 // A Logger provides fast, leveled, structured logging
 type Logger interface {
@@ -16,8 +19,16 @@ var (
 	globalLogger Logger = New()
 )
 
-func New() Logger {
-	return NewDefaultZapLogger()
+func New(options ...Option) Logger {
+	parameter := &Parameter{
+		Writer: os.Stdout,
+	}
+
+	for _, option := range options {
+		option(parameter)
+	}
+
+	return NewDefaultZapLogger(parameter)
 }
 
 // ReplaceGlobals replace package level logger

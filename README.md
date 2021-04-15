@@ -17,8 +17,8 @@ import (
     "gitlab.badanamu.com.cn/calmisland/common-log/log"
 )
 
-log.Writer = YourWriter
-log.ReplaceGlobals(log.New())
+logger := log.New(WithWriter(YourWriter))
+log.ReplaceGlobals(logger)
 
 log.Debug(ctx,  "writer to io.Writer")
 ```
