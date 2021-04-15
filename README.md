@@ -20,5 +20,5 @@ import (
 logger := log.New(WithWriter(YourWriter))
 log.ReplaceGlobals(logger)
 
-log.Debug(ctx,  "writer to io.Writer")
+log.Debug(ctx,  "write log to io.Writer")
 ```
