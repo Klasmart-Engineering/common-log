@@ -89,9 +89,7 @@ func TestNewWriter(t *testing.T) {
 	file, _ := ioutil.TempFile(".", "logger*.log")
 	defer file.Close()
 
-	Writer = file
-
-	ReplaceGlobals(New())
+	ReplaceGlobals(New(WithWriter(file)))
 
 	Debug(testContext, "Debug test", testFields...)
 	Info(testContext, "Info test", testFields...)

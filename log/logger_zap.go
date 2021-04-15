@@ -12,9 +12,9 @@ type ZapLogger struct {
 	*zap.Logger
 }
 
-func NewDefaultZapLogger() *ZapLogger {
+func NewDefaultZapLogger(parameter *Parameter) *ZapLogger {
 	encoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
-	writer := zapcore.AddSync(Writer)
+	writer := zapcore.AddSync(parameter.Writer)
 
 	core := zapcore.NewCore(encoder, writer, zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.DebugLevel
