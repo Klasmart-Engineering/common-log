@@ -16,8 +16,9 @@ func NewDefaultZapLogger(parameter *Parameter) *ZapLogger {
 	encoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
 	writer := zapcore.AddSync(parameter.Writer)
 
+	level := newZapLogLevel(parameter.LogLevel)
 	core := zapcore.NewCore(encoder, writer, zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.DebugLevel
+		return lvl >= level
 	}))
 
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))
@@ -155,4 +156,21 @@ func (l ZapLogger) parseFields(fields []Field) []zap.Field {
 	}
 
 	return zfields
+}
+
+func newZapLogLevel(level LogLevel) zapcore.Level {
+	switch level {
+	case LevelDebug:
+		return zapcore.DebugLevel
+	case LevelInfo:
+		return zapcore.InfoLevel
+	case LevelWarn:
+		return zapcore.WarnLevel
+	case LevelError:
+		return zapcore.ErrorLevel
+	case LevelFatal:
+		return zapcore.FatalLevel
+	default:
+		return zapcore.InfoLevel
+	}
 }
