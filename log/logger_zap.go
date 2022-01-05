@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,9 +11,10 @@ import (
 
 type ZapLogger struct {
 	*zap.Logger
+	dynamicFields func(context.Context) []Field
 }
 
-func NewDefaultZapLogger(parameter *Parameter) *ZapLogger {
+func NewZapLogger(parameter *Parameter) *ZapLogger {
 	encoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
 	writer := zapcore.AddSync(parameter.Writer)
 
@@ -21,36 +23,63 @@ func NewDefaultZapLogger(parameter *Parameter) *ZapLogger {
 		return lvl >= level
 	}))
 
-	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))
+	logger := &ZapLogger{
+		Logger:        zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2)),
+		dynamicFields: parameter.DynamicFields,
+	}
 
-	return NewZapLogger(logger)
+	if len(parameter.StaticFields) > 0 {
+		logger.Logger = logger.Logger.With(logger.parseFields(parameter.StaticFields)...)
+	}
+
+	return logger
 }
 
-func NewZapLogger(logger *zap.Logger) *ZapLogger {
-	return &ZapLogger{Logger: logger}
-}
+func (l ZapLogger) Debug(ctx context.Context, message string, fields ...Field) {
+	if l.dynamicFields != nil {
+		fields = append(fields, l.dynamicFields(ctx)...)
+	}
 
-func (l ZapLogger) Debug(message string, fields ...Field) {
 	l.Logger.Debug(message, l.parseFields(fields)...)
 }
 
-func (l ZapLogger) Info(message string, fields ...Field) {
+func (l ZapLogger) Info(ctx context.Context, message string, fields ...Field) {
+	if l.dynamicFields != nil {
+		fields = append(fields, l.dynamicFields(ctx)...)
+	}
+
 	l.Logger.Info(message, l.parseFields(fields)...)
 }
 
-func (l ZapLogger) Warn(message string, fields ...Field) {
+func (l ZapLogger) Warn(ctx context.Context, message string, fields ...Field) {
+	if l.dynamicFields != nil {
+		fields = append(fields, l.dynamicFields(ctx)...)
+	}
+
 	l.Logger.Warn(message, l.parseFields(fields)...)
 }
 
-func (l ZapLogger) Error(message string, fields ...Field) {
+func (l ZapLogger) Error(ctx context.Context, message string, fields ...Field) {
+	if l.dynamicFields != nil {
+		fields = append(fields, l.dynamicFields(ctx)...)
+	}
+
 	l.Logger.Error(message, l.parseFields(fields)...)
 }
 
-func (l ZapLogger) Panic(message string, fields ...Field) {
+func (l ZapLogger) Panic(ctx context.Context, message string, fields ...Field) {
+	if l.dynamicFields != nil {
+		fields = append(fields, l.dynamicFields(ctx)...)
+	}
+
 	l.Logger.Panic(message, l.parseFields(fields)...)
 }
 
-func (l ZapLogger) Fatal(message string, fields ...Field) {
+func (l ZapLogger) Fatal(ctx context.Context, message string, fields ...Field) {
+	if l.dynamicFields != nil {
+		fields = append(fields, l.dynamicFields(ctx)...)
+	}
+
 	l.Logger.Fatal(message, l.parseFields(fields)...)
 }
 

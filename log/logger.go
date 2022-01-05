@@ -7,12 +7,12 @@ import (
 
 // A Logger provides fast, leveled, structured logging
 type Logger interface {
-	Debug(string, ...Field)
-	Info(string, ...Field)
-	Warn(string, ...Field)
-	Error(string, ...Field)
-	Panic(string, ...Field)
-	Fatal(string, ...Field)
+	Debug(context.Context, string, ...Field)
+	Info(context.Context, string, ...Field)
+	Warn(context.Context, string, ...Field)
+	Error(context.Context, string, ...Field)
+	Panic(context.Context, string, ...Field)
+	Fatal(context.Context, string, ...Field)
 }
 
 var (
@@ -22,13 +22,15 @@ var (
 func New(options ...Option) Logger {
 	parameter := &Parameter{
 		Writer: os.Stdout,
+		// add trace fields by default
+		DynamicFields: TraceContext,
 	}
 
 	for _, option := range options {
 		option(parameter)
 	}
 
-	return NewDefaultZapLogger(parameter)
+	return NewZapLogger(parameter)
 }
 
 // ReplaceGlobals replace package level logger
@@ -37,35 +39,25 @@ func ReplaceGlobals(logger Logger) {
 }
 
 func Debug(ctx context.Context, message string, fields ...Field) {
-	fields = appendFields(ctx, fields)
-	globalLogger.Debug(message, fields...)
+	globalLogger.Debug(ctx, message, fields...)
 }
 
 func Info(ctx context.Context, message string, fields ...Field) {
-	fields = appendFields(ctx, fields)
-	globalLogger.Info(message, fields...)
+	globalLogger.Info(ctx, message, fields...)
 }
 
 func Warn(ctx context.Context, message string, fields ...Field) {
-	fields = appendFields(ctx, fields)
-	globalLogger.Warn(message, fields...)
+	globalLogger.Warn(ctx, message, fields...)
 }
 
 func Error(ctx context.Context, message string, fields ...Field) {
-	fields = appendFields(ctx, fields)
-	globalLogger.Error(message, fields...)
+	globalLogger.Error(ctx, message, fields...)
 }
 
 func Panic(ctx context.Context, message string, fields ...Field) {
-	fields = appendFields(ctx, fields)
-	globalLogger.Panic(message, fields...)
+	globalLogger.Panic(ctx, message, fields...)
 }
 
 func Fatal(ctx context.Context, message string, fields ...Field) {
-	fields = appendFields(ctx, fields)
-	globalLogger.Fatal(message, fields...)
-}
-
-func appendFields(ctx context.Context, fields []Field) []Field {
-	return append(fields, TraceContext(ctx)...)
+	globalLogger.Fatal(ctx, message, fields...)
 }

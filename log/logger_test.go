@@ -89,10 +89,32 @@ func TestNewWriter(t *testing.T) {
 	file, _ := ioutil.TempFile(".", "logger*.log")
 	defer file.Close()
 
-	ReplaceGlobals(New(WithWriter(file)))
+	ReplaceGlobals(New(
+		WithWriter(file),
+		WithLogLevel(LevelDebug),
+		WithStaticFields([]Field{
+			String("service", "test"),
+			String("hello", "world"),
+		}),
+		WithDynamicFields(func(ctx context.Context) []Field {
+			value, ok := ctx.Value("aabbccddKK").(string)
+
+			return []Field{
+				String("aabbccddKK", value),
+				Bool("ok", ok),
+			}
+		}),
+	))
 
 	Debug(testContext, "Debug test", testFields...)
 	Info(testContext, "Info test", testFields...)
 	Warn(testContext, "Warn test", testFields...)
 	Error(testContext, "Error test", testFields...)
+
+	ctx := context.WithValue(testContext, "aabbccddKK", "665544332211")
+
+	Debug(ctx, "Debug test", testFields...)
+	Info(ctx, "Info test", testFields...)
+	Warn(ctx, "Warn test", testFields...)
+	Error(ctx, "Error test", testFields...)
 }
