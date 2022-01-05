@@ -21,7 +21,8 @@ var (
 
 func New(options ...Option) Logger {
 	parameter := &Parameter{
-		Writer: os.Stdout,
+		Writer:   os.Stdout,
+		LogLevel: LevelDebug,
 		// add trace fields by default
 		DynamicFields: TraceContext,
 	}
