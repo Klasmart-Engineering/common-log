@@ -7,8 +7,6 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"gitlab.badanamu.com.cn/calmisland/common-cn/helper"
 )
 
 var (
@@ -17,12 +15,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	badaCtx := &helper.BadaCtx{
-		CurrTid:  "tid-1234567",
-		PrevTid:  "prev-2222222",
-		EntryTid: "entry-333333",
-	}
-	testContext = context.WithValue(context.TODO(), helper.CtxKeyBadaCtx, badaCtx)
+	testContext = context.Background()
 
 	testFields = []Field{
 		Int("int", 1),
@@ -58,7 +51,6 @@ func TestMain(m *testing.M) {
 		Err(errors.New("test error")),
 		NamedError("my error", errors.New("my error")),
 		Stack("stack"),
-		Any("any", badaCtx),
 		Skip(),
 	}
 

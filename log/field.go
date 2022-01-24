@@ -1,14 +1,11 @@
 package log
 
 import (
-	"context"
 	"fmt"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
-
-	"gitlab.badanamu.com.cn/calmisland/common-cn/helper"
 )
 
 // A FieldType indicates which member of the Field union struct should be used
@@ -745,26 +742,4 @@ func Uint8s(key string, nums []uint8) Field {
 // Uintptrs constructs a field that carries a slice of pointer addresses.
 func Uintptrs(key string, us []uintptr) Field {
 	return Field{Key: key, Type: UintptrsType, Value: us}
-}
-
-// TraceContext constructs a field that carries a slice of trace id in context.
-func TraceContext(ctx context.Context) (fields []Field) {
-	badaCtx, ok := helper.GetBadaCtx(ctx)
-	if !ok {
-		return
-	}
-
-	if badaCtx.CurrTid != "" {
-		fields = append(fields, String("currTid", badaCtx.CurrTid))
-	}
-
-	if badaCtx.PrevTid != "" {
-		fields = append(fields, String("prevTid", badaCtx.PrevTid))
-	}
-
-	if badaCtx.EntryTid != "" {
-		fields = append(fields, String("entryTid", badaCtx.EntryTid))
-	}
-
-	return
 }
