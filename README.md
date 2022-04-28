@@ -5,14 +5,14 @@
 ### 安装
 
 ```
-go get gitlab.badanamu.com.cn/calmisland/common-log/log
+go get github.com/KL-Engineering/common-log
 ```
 
 ### 使用方法
 
 ```
 import (
-    "gitlab.badanamu.com.cn/calmisland/common-log/log"
+    "github.com/KL-Engineering/common-log/log"
 )
 
 log.Info(ctx, "just a test message", log.Time("now", time.Now()), log.String("abc", "123"))
