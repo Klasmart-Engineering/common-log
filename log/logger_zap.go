@@ -16,7 +16,7 @@ type samplerCore struct {
 }
 
 func (sc samplerCore) Write(e zapcore.Entry, fields []zapcore.Field) error {
-	if sc.samplePrefix == "" || e.Level == zapcore.PanicLevel || e.Level == zapcore.FatalLevel {
+	if sc.samplePrefix == "" || e.Level >= zapcore.ErrorLevel {
 		// no sampling prefix configured, or panic/fatal level, just pass through to write log
 		return sc.Core.Write(e, fields)
 	}
