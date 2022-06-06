@@ -21,12 +21,12 @@ func (sc samplerCore) Write(e zapcore.Entry, fields []zapcore.Field) error {
 		return sc.Core.Write(e, fields)
 	}
 
-	// find out the entryTid from back side, it usually appeared in the last field,
-	// if someone modified the log.dynamicFields that changed the position of entryTid,
+	// find out the nrTid from back side, it usually appeared in the last field,
+	// if someone modified the log.dynamicFields that changed the position of nrTid,
 	// that's ok for performance, because comparing string is very, very fast.
 	for i := len(fields) - 1; i >= 0; i-- {
-		if fields[i].Key == "entryTid" {
-			// entryTid found
+		if fields[i].Key == "nrTid" {
+			// nrTid found
 			if strings.HasPrefix(fields[i].String, sc.samplePrefix) {
 				// prefix matched, write the log
 				return sc.Core.Write(e, fields)
