@@ -10,6 +10,8 @@ type Parameter struct {
 	LogLevel      LogLevel
 	StaticFields  []Field
 	DynamicFields func(context.Context) []Field
+	// SamplePrefix controls if log will be sampled by matching the prefix on trace id.
+	SamplePrefix string
 }
 
 // Option logger option
@@ -36,5 +38,11 @@ func WithStaticFields(fields []Field) Option {
 func WithDynamicFields(fn func(context.Context) []Field) Option {
 	return func(c *Parameter) {
 		c.DynamicFields = fn
+	}
+}
+
+func WithSamplePrefix(prefix string) Option {
+	return func(c *Parameter) {
+		c.SamplePrefix = prefix
 	}
 }

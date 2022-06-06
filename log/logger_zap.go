@@ -3,11 +3,49 @@ package log
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+type samplerCore struct {
+	zapcore.Core
+	samplePrefix string
+}
+
+func (sc samplerCore) Write(e zapcore.Entry, fields []zapcore.Field) error {
+	if sc.samplePrefix == "" {
+		// no sampling prefix configured, just pass through
+		return sc.Core.Write(e, fields)
+	}
+
+	// find out the entryTid from back side, it usually appeared in the last field,
+	// if someone modified the log.dynamicFields that changed the position of entryTid,
+	// that's ok for performance, because comparing string is very, very fast.
+	for i := len(fields) - 1; i >= 0; i-- {
+		if fields[i].Key == "entryTid" {
+			// entryTid found
+			if strings.HasPrefix(fields[i].String, sc.samplePrefix) {
+				// prefix matched, write the log
+				return sc.Core.Write(e, fields)
+			}
+			break
+		}
+	}
+	// no prefix matched, drop the log
+	return nil
+}
+
+// Check copied from zapcore.ioCore, which would take the effact on samplerCore.Write.
+// if we don't do this, samplerCore.Write won't be called.
+func (sc samplerCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
+	if sc.Enabled(ent.Level) {
+		return ce.AddCore(ent, sc)
+	}
+	return ce
+}
 
 type ZapLogger struct {
 	*zap.Logger
@@ -22,6 +60,7 @@ func NewZapLogger(parameter *Parameter) *ZapLogger {
 	core := zapcore.NewCore(encoder, writer, zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= level
 	}))
+	core = samplerCore{core, parameter.SamplePrefix}
 
 	logger := &ZapLogger{
 		Logger:        zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2)),
