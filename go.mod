@@ -1,4 +1,4 @@
-module github.com/KL-Engineering/common-log
+module github.com/Klasmart-Engineering/common-log
 
 go 1.18
 
